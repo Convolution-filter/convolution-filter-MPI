@@ -6,6 +6,10 @@
 
 #define filter_size 3
 
+// Forward declarations
+int calculate_filtered_pixel(int pixel_idx, int* src_array, int row_size, 
+                                int* filter);
+
 int* create_random_array(int row_size)
 {
     int array_size = row_size * row_size;
@@ -14,47 +18,78 @@ int* create_random_array(int row_size)
     srand(time(NULL));
     for ( i = 0; i < array_size; i++)
     {
-        //int shade = rand()%255;
-        //array[i] = shade;
-        array[i] = 1;
+        int shade = rand() % 255;
+        array[i] = shade;
+//        array[i] = 1;
     }
 
     return array;
 }
 
 
-int compute_internal_values(int* src_array, int* dest_array, int row_size, int* filter)
+void compute_internal_values(int* src_array, int* dest_array, int row_size, int* filter)
 {
     int i, row_number = 3;
     int array_size = row_size * row_size;
     for (i = 2 * row_size + 2; i < array_size - 2 * row_size - 2; i++)
     {
         if( i % (row_number * row_size - 2) == 0)
-        {//to skip elements of the first and last column
+        {
+            //to skip elements of the first and last column
             i += 3;
             row_number++;
             continue;
         }
-        int sum = 0;
-        int j, z = 0;
-        int coef = - 1;
-        for ( j = i + coef * row_size - 1; j <= i + row_size + 1; j++ )
-        {
-            if(j % (row_size) == (i + 2) % row_size)
-            {
-                coef++;
-                j = i + coef * row_size - 2;
-                continue;
-            }
-
-            //sum += src_array[j] * filter[z] / (filter_size * filter_size);
-            sum +=  filter[z] / (filter_size * filter_size);
-            z++;
-        }
-        dest_array[i] = sum;
+        dest_array[i] = calculate_filtered_pixel(i, src_array, row_size, filter);
     }
-    return 0;
 }
+
+
+void compute_outer_values(int* src_array, int* dest_array, int row_size, int* filter) 
+{
+    int i;
+    int array_size = row_size * row_size;
+    // Compute outer lines
+    for (i = row_size + 1; i < array_size - row_size - 1; i++)
+    {
+        // Go to last line
+        if (i % (2 * row_size - 1) == 0) {
+            i = array_size - 2 * row_size;
+            continue;
+        }
+        dest_array[i] = calculate_filtered_pixel(i, src_array, row_size, filter);
+    }
+    // Compute outer columns
+    for (i = 2 * row_size + 1; i < array_size - 3 * row_size + 3; i += row_size)
+    {
+        dest_array[i] = calculate_filtered_pixel(i, src_array, row_size, filter);
+        int right_idx = i + row_size - 3;
+        dest_array[right_idx] = calculate_filtered_pixel(right_idx, src_array, row_size, filter);
+    }
+}
+
+
+int calculate_filtered_pixel(int pixel_idx, int* src_array, int row_size, 
+                                int* filter)
+{
+    int sum = 0;
+    int j, z = 0;
+    int coef = - 1;
+    for (j = pixel_idx + coef * row_size - 1; 
+         j <= pixel_idx + row_size + 1; j++ )
+    {
+        if(j % (row_size) == (pixel_idx + 2) % row_size)
+        {
+            coef++;
+            j = pixel_idx + coef * row_size - 2;
+            continue;
+        }
+        sum += src_array[j] * filter[z] / (filter_size * filter_size);
+        z++;
+    }
+    return sum;
+}
+
 
 void print_array(int* arr, int row_size)
 {
@@ -63,7 +98,7 @@ void print_array(int* arr, int row_size)
     {
         if((i != 0) && (i % (row_size )== 0))
             printf("\n");
-        printf("%3d ", arr[i]);
+        printf("%4d ", arr[i]);
     }
     putchar('\n');
 }

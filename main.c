@@ -5,16 +5,15 @@
 
 int main(void)
 {
-    int filter[10] = { 9, 9, 9, 9, 9, 9, 9, 9, 9, 9 };
-    int * ar = create_random_array(10);
-    print_array(ar,10);
-    int* dest = malloc(100 * sizeof(int));
-    compute_internal_values(ar,dest,10,filter);
+    int block_size = 10;
+    int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
+    int * ar = create_random_array(block_size);
+    print_array(ar,block_size);
+    int* dest = malloc(block_size * block_size * sizeof(int));
+    compute_internal_values(ar,dest,block_size,filter);
+    compute_outer_values(ar, dest, block_size, filter);
     putchar('\n');
-    print_array(dest,10);
-
-
-
+    print_array(dest,block_size);
     return 0;
 }
 
