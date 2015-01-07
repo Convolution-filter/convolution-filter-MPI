@@ -25,20 +25,20 @@ int* create_random_array(int row_size)
 
 int compute_internal_values(int* src_array, int* dest_array, int row_size, int* filter)
 {
-    int i;
+    int i, row_number = 3;
     int array_size = row_size * row_size;
     for (i = 2 * row_size + 2; i < array_size - 2 * row_size - 2; i++)
     {
-        if( i % (row_size - 2) == 0)
+        if( i % (row_number * row_size - 2) == 0)
         {//to skip elements of the first and last column
             i += 3;
+            row_number++;
             continue;
         }
-
         int sum = 0;
         int j, z = 0;
         int coef = - 1;
-        for ( j = i + coef * row_size - 1; j <= row_size + 1; j++ )
+        for ( j = i + coef * row_size - 1; j <= i + row_size + 1; j++ )
         {
             if(j % (row_size) == (i + 2) % row_size)
             {
@@ -52,7 +52,6 @@ int compute_internal_values(int* src_array, int* dest_array, int row_size, int* 
             z++;
         }
         dest_array[i] = sum;
-
     }
     return 0;
 }
