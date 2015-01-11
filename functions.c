@@ -15,12 +15,15 @@ int* create_random_array(int row_size)
     int array_size = row_size * row_size;
     int* array = malloc(array_size * sizeof(int));
     int i;
+    int content = 11;
     srand(time(NULL));
     for ( i = 0; i < array_size; i++)
     {
-        int shade = rand() % 255;
-        array[i] = shade;
-//        array[i] = 1;
+//        int shade = rand() % 255;
+//        array[i] = shade;
+        if ((i != 0) && (i % row_size))
+            content++;
+        array[i] = content;
     }
 
     return array;

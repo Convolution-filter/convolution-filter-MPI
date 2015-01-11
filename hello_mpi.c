@@ -13,7 +13,6 @@ int hello_mpi(void) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Get_processor_name(processor_name, &namelen);
 
-//    printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
     if (rank == 0) {
         printf("I'm master\n");
         int slaves_rank = -1;
