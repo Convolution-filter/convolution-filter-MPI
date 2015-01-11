@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <mpi.h>
+#include <unistd.h>
 #include "hello_mpi.h"
 
 
@@ -17,16 +18,19 @@ int hello_mpi(void) {
         printf("I'm master\n");
         int slaves_rank = -1;
         int i;
-        struct MPI_Status status;
+        MPI_Status status;
+        MPI_Request request;
         for (i = 1; i < numprocs; i++) {
-            MPI_Recv(&slaves_rank, 1, MPI_INT, i,10111, MPI_COMM_WORLD, &status);
-            printf("Master got reply from %d and status is: %d\n", slaves_rank,
-                status.MPI_ERROR);
+            MPI_Irecv(&slaves_rank, 1, MPI_INT, i, 10111, MPI_COMM_WORLD, &request);
+            MPI_Wait(&request, &status);
+            printf("Master got reply from %d and request is: %d\n", slaves_rank,
+                request);
         }
     }
     else {
-        printf("Only a slave\n");
-        MPI_Send((void*)&rank, 1, MPI_INT, 0, 10111, MPI_COMM_WORLD);
+        MPI_Request request;
+        MPI_Isend((void*)&rank, 1, MPI_INT, 0, 10111, MPI_COMM_WORLD, &request);
+        printf("Only a slave - with request %d\n", request);
     }
 
     MPI_Finalize();
