@@ -22,6 +22,13 @@ extern "C" {
         left
     } direction;
     
+    typedef enum corner {
+        upper_left,
+        upper_right,
+        lower_right,
+        lower_left
+    } corner;
+    
     int send_data(int* src, MPI_Datatype mpi_column, MPI_Datatype mpi_row, 
     int my_rank, int proc_num, int width, int height);
 

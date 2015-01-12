@@ -3,7 +3,8 @@
 #include <mpi.h>
 #include <string.h>
 #include "functions.h"
-#include "communication_functions.h"
+#include "send_wrappers.h"
+#include "recv_wrappers.h"
 #include "hello_mpi.h"
 
 int main()
@@ -44,19 +45,12 @@ int main()
         int i;
         int *ar = create_random_array(block_width, block_heigth);
         print_array(ar, block_width, block_heigth);
-        MPI_Status status;
-        MPI_Request request;
         int buffer[block_width * block_heigth];
         memset(buffer, -1, sizeof(buffer));
         for (i = 1; i < numprocs; i++) {
-            MPI_Irecv(buffer + block_width, 1, mpi_column, i, 10111, MPI_COMM_WORLD, &request);
-            MPI_Wait(&request, &status);
-            MPI_Irecv(buffer + 2 * block_width - 1, 1, mpi_column, i, 10111, MPI_COMM_WORLD, &request);
-            MPI_Wait(&request, &status);
-            MPI_Irecv(buffer + 1, 1, mpi_row, i, 10111, MPI_COMM_WORLD, &request);
-            MPI_Wait(&request, &status);
-            MPI_Irecv(buffer + block_width * block_heigth - block_width + 1, 1, mpi_row, i, 10111, MPI_COMM_WORLD, &request);
-            MPI_Wait(&request, &status);
+            MPI_Request* requests = recv_data(buffer, mpi_column, mpi_row, block_width, block_heigth,
+                10111, rank);
+            wait_on_recv(requests);
             printf("Master got reply from rank: %d\n", i);
             print_array(buffer,  block_width, block_heigth);
             printf("\n----------------------------\n");
@@ -65,6 +59,7 @@ int main()
     }
     else {
         int *ar = create_random_array(block_width, block_heigth);
+//        printf("I'm slave (%2d)\n", rank);
         send_data(ar, mpi_column, mpi_row, rank, numprocs, block_width, block_heigth);
     }
 

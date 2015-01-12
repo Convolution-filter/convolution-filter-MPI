@@ -21,7 +21,7 @@ int* create_random_array(int width, int height)
     {
 //        int shade = rand() % 255;
 //        array[i] = shade;
-        array[i] = 11;
+        array[i] = i;
     }
 
     return array;
