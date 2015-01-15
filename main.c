@@ -1,19 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include <math.h>
 #include <string.h>
 #include "functions.h"
 #include "send_wrappers.h"
 #include "recv_wrappers.h"
 #include "hello_mpi.h"
+#include "initializations.h"
+
+MPI_Comm CARTESIAN_COMM;
 
 int main()
 {
     int numprocs, rank, namelen;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     int block_width = 15;
-    int block_heigth = 10;
+    int block_heigth = 30;
     int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
+    
 //    int *ar = create_random_array(block_width, block_heigth);
 //    print_array(ar, block_width, block_heigth);
 //    int* dest = malloc(block_width * block_heigth * sizeof(int));
@@ -27,7 +32,23 @@ int main()
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Get_processor_name(processor_name, &namelen);
     
+    // Read image and send it
     
+    // Create new communicator (of Cartesian topology)
+    printf("One dim: %d\n", ((int) sqrt(numprocs)));
+    int dims[2] = {(int) sqrt(numprocs), (int) sqrt(numprocs)};
+    int cyclic[2] = {1, 1};
+    MPI_Cart_create(MPI_COMM_WORLD, 2, dims, cyclic, 1, &CARTESIAN_COMM);
+    
+    int coords[2];
+    memset(coords, '\0', sizeof(coords));
+    if (CARTESIAN_COMM != MPI_COMM_NULL) {
+        MPI_Cart_coords(CARTESIAN_COMM, rank, 2, coords);
+        MPI_Cart_rank(CARTESIAN_COMM, coords, &rank);
+        printf("%8d %8d %8d\n", coords[0], coords[1], rank);
+    }
+    
+//    MPI_Barrier(MPI_COMM_WORLD);
 //    int* dest = malloc(block_width * block_heigth * sizeof(int));
 //    compute_internal_values(ar,dest, block_width, block_heigth,filter);
 //    compute_outer_values(ar, dest, block_width, block_heigth, filter);
@@ -35,11 +56,11 @@ int main()
 //    print_array(dest,block_width, block_heigth);
     
     // Create datatype for columns
-    MPI_Datatype mpi_column, mpi_row;
-    MPI_Type_vector(block_heigth - 2, 1, block_width, MPI_INT, &mpi_column);
-    MPI_Type_vector(1, block_width - 2, 0, MPI_INT, &mpi_row);
-    MPI_Type_commit(&mpi_column);
-    MPI_Type_commit(&mpi_row);
+//    MPI_Datatype mpi_column, mpi_row;
+//    MPI_Type_vector(block_heigth - 2, 1, block_width, MPI_INT, &mpi_column);
+//    MPI_Type_vector(1, block_width - 2, 0, MPI_INT, &mpi_row);  
+//    MPI_Type_commit(&mpi_column);
+//    MPI_Type_commit(&mpi_row);
     if (rank == 0) {
         printf("I'm master\n");
         int i;

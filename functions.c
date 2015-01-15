@@ -1,8 +1,7 @@
-
-#include "functions.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include "functions.h"
 
 #define filter_size 3
 
