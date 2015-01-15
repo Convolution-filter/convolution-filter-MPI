@@ -40,7 +40,6 @@ int main()
     if (CARTESIAN_COMM != MPI_COMM_NULL) {
         MPI_Cart_coords(CARTESIAN_COMM, rank, 2, coords);
         MPI_Cart_rank(CARTESIAN_COMM, coords, &rank);
-//        printf("%8d %8d %8d\n", coords[0], coords[1], rank);
     }
     else {
         printf("Could not properly set CARTESIAN_COMM_WORLD\n");
@@ -50,7 +49,7 @@ int main()
     sleep(2);
     MPI_Barrier(CARTESIAN_COMM);
 
-    block = process_img(block, block_width, block_height, 1);
+    block = process_img(block, block_width, block_height, 10, 2);
     int* image = NULL;
     if (rank != 0) {
         MPI_Gather(block + block_width + 1, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
