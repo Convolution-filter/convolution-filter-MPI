@@ -15,18 +15,18 @@ extern MPI_Datatype mpi_block, mpi_block_img;
 
 int main()
 {
-    char filename[] = "waterfall_1920_2520.raw";
-    int img_width = 20;
-    int img_height = 40;
+    char filename[] = "waterfall_grey_1920_2520.raw";
+    int img_width = 1920;
+    int img_height = 2520;
     int numprocs, rank;
-    
+
     // Read image and send it
     int *block = initalization_phase(filename, img_width, img_height, 1);
-    
+
 
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    
+
     int block_width = img_width / sqrt(numprocs) + 2;
     int block_height = img_height / sqrt(numprocs) + 2;
     // ---------------------------
@@ -36,13 +36,13 @@ int main()
 //        block[i] = rank;
 //    }
     // ---------------------------
-    
+
     // Create new communicator (of Cartesian topology)
 //    printf("One dim: %d\n", ((int) sqrt(numprocs)));
     int dims[2] = {(int) sqrt(numprocs), (int) sqrt(numprocs)};
     int cyclic[2] = {1, 1};
     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, cyclic, 1, &CARTESIAN_COMM);
-    
+
     int coords[2];
     memset(coords, '\0', sizeof(coords));
     if (CARTESIAN_COMM != MPI_COMM_NULL) {
@@ -57,7 +57,7 @@ int main()
     }
     sleep(2);
     MPI_Barrier(CARTESIAN_COMM);
-    
+
     block = process_img(block, block_width, block_height, 1);
     int* image = NULL;
     if (rank != 0) {
@@ -68,10 +68,10 @@ int main()
         MPI_Gather(block, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
         // write BW image as raw file
         FILE* output = fopen("output.raw", "wb");
-        unsigned char* img_buffer = malloc(img_height * img_width * 
+        unsigned char* img_buffer = malloc(img_height * img_width *
                                         sizeof(unsigned char));
         sleep(4);
-        print_array(image, img_width, img_height);
+        //print_array(image, img_width, img_height);
         printf("\n\n\n\n\n\n\n\n\n");
 //        sleep(2);
         int i;

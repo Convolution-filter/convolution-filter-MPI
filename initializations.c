@@ -12,7 +12,7 @@
 int* BW_initialization(const char* filename, int width, int height,
         int img_block_width, int img_block_height, int proc_num);
 int** RGB_initialization(const char* filename, int width, int height);
-int** send_image(int* img_buffer, int width, int height, int proc_num, 
+int** send_image(int* img_buffer, int width, int height, int proc_num,
                 int img_block_width, int img_block_height,
                 int proc_per_row, MPI_Request** requests);
 int* extract_img_block(int* img, int img_length, int proc_per_row,
@@ -22,7 +22,7 @@ int initialize_MPI();
 int* read_BW_img(const char* filename, int width, int height);
 
 //-------------------------------------------
-// Datatypes 
+// Datatypes
 //-------------------------------------------
 MPI_Datatype mpi_column, mpi_row, mpi_block_img, mpi_block;
 
@@ -30,28 +30,28 @@ MPI_Datatype mpi_column, mpi_row, mpi_block_img, mpi_block;
 //-------------------------------------------
 // Methods
 //-------------------------------------------
-int* initalization_phase(const char* filename, int width, int height, 
+int* initalization_phase(const char* filename, int width, int height,
                         unsigned int isBW) {
     int proc_num = initialize_MPI();
-    
+
     int proc_per_row;
     proc_per_row = (int) sqrt(proc_num);
     int img_block_width = width / proc_per_row;
     int img_block_height = height / proc_per_row;
-    
+
     // Create datatype for columns
-    MPI_Type_vector(img_block_height, 1, img_block_width + 2, MPI_INT, 
+    MPI_Type_vector(img_block_height, 1, img_block_width + 2, MPI_INT,
         &mpi_column);
     MPI_Type_commit(&mpi_column);
-    MPI_Type_vector(1, img_block_width, 0, MPI_INT, &mpi_row);  
+    MPI_Type_vector(1, img_block_width, 0, MPI_INT, &mpi_row);
     MPI_Type_commit(&mpi_row);
-    MPI_Type_vector(1, img_block_width * img_block_height, 0, MPI_INT, 
+    MPI_Type_vector(1, img_block_width * img_block_height, 0, MPI_INT,
         &mpi_block_img);
     MPI_Type_commit(&mpi_block_img);
-    MPI_Type_vector(img_block_height, img_block_width, 
+    MPI_Type_vector(img_block_height, img_block_width,
             img_block_width + 2, MPI_INT, &mpi_block);
     MPI_Type_commit(&mpi_block);
-    
+
     // Start separating master and slave procs
     int rank;
     int* block = NULL;
@@ -59,37 +59,40 @@ int* initalization_phase(const char* filename, int width, int height,
     if (rank == 0) {
         if (isBW) {
             printf("Master: about to initialize BW\n");
-            int* img_buffer = 
+            int* img_buffer =
                     BW_initialization(filename, width, height,
                         img_block_width, img_block_height, proc_num);
-            block = malloc((img_block_width + 2) * 
+            block = malloc((img_block_width + 2) *
                         (img_block_height + 2) * sizeof(int));
-            MPI_Scatter(img_buffer, 1, mpi_block_img, 
-                block + img_block_width + 3, 1, mpi_block, 
+            MPI_Scatter(img_buffer, 1, mpi_block_img,
+                block + img_block_width + 3, 1, mpi_block,
                 0, MPI_COMM_WORLD);
         }
     }
     else {
         if (isBW) {
-            int block_length = 
+            int block_length =
                     (img_block_width + 2) * (img_block_height + 2);
             block = malloc(block_length * sizeof(int));
             memset(block, '\0', block_length * sizeof(int));
-            MPI_Scatter(NULL, 1, mpi_block_img, block + img_block_width + 3, 
+            MPI_Scatter(NULL, 1, mpi_block_img, block + img_block_width + 3,
                 1, mpi_block, 0, MPI_COMM_WORLD);
         }
     }
     return block;
 }
 
-int* BW_initialization(const char* filename, int width, int height, 
+int* BW_initialization(const char* filename, int width, int height,
                         int img_block_width, int img_block_height,
                         int proc_num) {
     // Read image
-//    int* img_buffer = read_BW_img(filename, width, height);
-//    if (img_buffer == NULL)
-//        return IMG_LOAD_FAILURE;
-    int* img_buffer = create_random_array(width, height);
+    int* img_buffer = read_BW_img(filename, width, height);
+    if (img_buffer == NULL)
+    {
+        return IMG_LOAD_FAILURE;
+    }
+
+//    int* img_buffer = create_random_array(width, height);
     return img_buffer;
 }
 
@@ -143,7 +146,7 @@ int initialize_MPI() {
 /*
  * Send image blocks to all other processes
  */
-int** send_image(int* img_buffer, int width, int height, int proc_num, 
+int** send_image(int* img_buffer, int width, int height, int proc_num,
                 int img_block_width, int img_block_height,
                 int proc_per_row, MPI_Request** requests) {
     int i;
@@ -152,7 +155,7 @@ int** send_image(int* img_buffer, int width, int height, int proc_num,
     for (i = 1; i < proc_num; i++) {
         int* img_block = extract_img_block(img_buffer, width * height,
                         proc_per_row, i, img_block_width, img_block_height);
-//        MPI_Isend(img_block, img_block_width * img_block_height, mpi_block_img, 
+//        MPI_Isend(img_block, img_block_width * img_block_height, mpi_block_img,
 //            i, IMG_BLOCK_MSG, MPI_COMM_WORLD, &((*requests)[i - 1]));
     }
     return img_blocks;
@@ -163,7 +166,7 @@ int** send_image(int* img_buffer, int width, int height, int proc_num,
  */
 
 /*
- * Reads the BW image into an int[] buffer 
+ * Reads the BW image into an int[] buffer
  * Return value:
  *  On success, the buffer is returned
  *  Otherwise, NULL is returned
@@ -174,8 +177,8 @@ int* read_BW_img(const char* filename, int width, int height) {
         fprintf(stderr, "read_BW_img - Could open image file\n");
         return NULL;
     }
-    int *img = NULL;
-    img = malloc(width * height * sizeof(int));
+    unsigned char *img = NULL;
+    img = malloc(width * height);
     if (img == NULL) {
         fprintf(stderr, "read_BW_img - Could not allocate img buffer\n");
         return NULL;
@@ -186,8 +189,15 @@ int* read_BW_img(const char* filename, int width, int height) {
         img = NULL;
         return NULL;
     }
+    int i;
+    int *img_int = malloc(width * height * sizeof(int));
+    for ( i = 0; i < width * height; i++)
+    {
+        img_int[i] = img[i];
+    }
+    free(img);
     fclose(img_file);
-    return img;
+    return img_int;
 }
 
 /*
@@ -217,7 +227,7 @@ int** read_RGB_img(const char* filename, int width, int height) {
         return NULL;
     }
     fclose(img_file);
-    
+
     int** rgb_buffers = malloc(3 * sizeof(int*));
     if (rgb_buffers == NULL) {
         fprintf(stderr, "read_RGB_img - Failed to allocate space for "

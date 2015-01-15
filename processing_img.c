@@ -58,9 +58,9 @@ int* process_img(int* block, int block_width, int block_height, int rep_num) {
         // Wait on send of our outer
 //        printf("proc(%d) - before wait on send\n", rank);
         wait_on_send(requests_send);
-        sleep(rank * (rank + 2));
-        printf("proc(%d) finished\n", rank);
-        print_array(block, block_width, block_height);
+        //sleep(rank * (rank + 2));
+        //printf("proc(%d) finished\n", rank);
+        //print_array(block, block_width, block_height);
         memcpy(block, tmp_block, block_width * block_height * sizeof(int));
     }
 //    sleep(rank * (rank + 2));
@@ -70,7 +70,7 @@ int* process_img(int* block, int block_width, int block_height, int rep_num) {
 }
 
 
-void compute_inner_values(int* src_array, int* dest_array, 
+void compute_inner_values(int* src_array, int* dest_array,
                                 int width, int height, int* filter)
 {
     int i, row_number = 3;
@@ -90,8 +90,8 @@ void compute_inner_values(int* src_array, int* dest_array,
 }
 
 
-void compute_outer_values(int* src_array, int* dest_array, 
-    int width, int height, int* filter) 
+void compute_outer_values(int* src_array, int* dest_array,
+    int width, int height, int* filter)
 {
     int i;
     int array_size = width * height;
@@ -103,19 +103,19 @@ void compute_outer_values(int* src_array, int* dest_array,
             i = array_size - 2 * width;
             continue;
         }
-        dest_array[i] = 
+        dest_array[i] =
             calculate_filtered_pixel(i, src_array, width, height, filter);
 //        dest_array[i] = src_array[i];
     }
     // Compute outer columns
     for (i = 2 * width + 1; i < array_size - 3 * width + 3; i += width)
     {
-        dest_array[i] = 
+        dest_array[i] =
             calculate_filtered_pixel(i, src_array, width, height, filter);
 //        dest_array[i] = src_array[i];
         int right_idx = i + width - 3;
 //        dest_array[right_idx] = src_array[right_idx];
-        dest_array[right_idx] = 
+        dest_array[right_idx] =
             calculate_filtered_pixel(right_idx, src_array, width, height, filter);
     }
 }
@@ -127,7 +127,7 @@ int calculate_filtered_pixel(int pixel_idx, int* src_array, int width,
     int sum = 0;
     int j, z = 0;
     int coef = - 1;
-    for (j = pixel_idx + coef * width - 1; 
+    for (j = pixel_idx + coef * width - 1;
          j <= pixel_idx + width + 1; j++ )
     {
         if ((j % width) == (pixel_idx + 2) % width)
@@ -136,7 +136,7 @@ int calculate_filtered_pixel(int pixel_idx, int* src_array, int width,
             j = pixel_idx + coef * width - 2;
             continue;
         }
-        sum += src_array[j] * filter[z] / filter_sum;
+        sum += (src_array[j] * filter[z]) / filter_sum;
         z++;
     }
     if (sum > 255)
