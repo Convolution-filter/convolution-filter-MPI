@@ -8,8 +8,8 @@
 #include "send_wrappers.h"
 #include "recv_wrappers.h"
 
-#define filter_sum 16
-int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
+#define filter_sum 9
+int filter[9] = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
 // Forward declarations
 int calculate_filtered_pixel(int pixel_idx, int* src_array, int width,
@@ -139,6 +139,7 @@ int calculate_filtered_pixel(int pixel_idx, int* src_array, int width,
         sum += (src_array[j] * filter[z]) / filter_sum;
         z++;
     }
+    return src_array[pixel_idx];
     if (sum > 255)
         return 255;
     else

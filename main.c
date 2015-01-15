@@ -58,14 +58,14 @@ int main()
     sleep(2);
     MPI_Barrier(CARTESIAN_COMM);
 
-    block = process_img(block, block_width, block_height, 1);
+    block = process_img(block, block_width, block_height, 2);
     int* image = NULL;
     if (rank != 0) {
-        MPI_Gather(block, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
+        MPI_Gather(block + block_width + 1, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
     }
     else {
         image = malloc(img_width * img_height * sizeof(int));
-        MPI_Gather(block, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
+        MPI_Gather(block + block_width + 1, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
         // write BW image as raw file
         FILE* output = fopen("output.raw", "wb");
         unsigned char* img_buffer = malloc(img_height * img_width *
@@ -77,9 +77,9 @@ int main()
         int i;
         for (i = 0; i < img_height * img_width; i++) {
             img_buffer[i] = (unsigned char) image[i];
-            printf("%4u ", img_buffer[i]);
-            if ((i != 0) && ((i + 1) % img_width == 0))
-                putchar('\n');
+            //printf("%4u ", img_buffer[i]);
+            //if ((i != 0) && ((i + 1) % img_width == 0))
+             //   putchar('\n');
         }
         putchar('\n');
         fwrite(img_buffer, sizeof(char), img_height * img_width, output);
