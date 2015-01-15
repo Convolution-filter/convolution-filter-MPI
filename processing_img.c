@@ -8,9 +8,9 @@
 #include "send_wrappers.h"
 #include "recv_wrappers.h"
 
-#define filter_sum 9
-int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
-//int filter[9] = {0,1,0,1,-4,0,1,0}; // Edge detect
+#define filter_sum -1
+//int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
+int filter[9] = {0,1,0,1,-4,0,1,0}; // Edge detect
 //int filter[9] = {0,-1,0,-1,5,-1,0,-1,0};
 
 // Forward declarations
@@ -25,9 +25,9 @@ int* create_random_array(int width, int height)
     srand(time(NULL));
     for (i = 0; i < array_size; i++)
     {
-//        int shade = rand() % 255;
-//        array[i] = shade;
-        array[i] = i;
+        int shade = rand() % 255;
+        array[i] = shade;
+//        array[i] = i;
     }
 
     return array;
@@ -43,31 +43,19 @@ int* process_img(int* block, int block_width, int block_height, int rep_num) {
     memset(tmp_block, '\0', block_width * block_height * sizeof(int));
     for (i = 0; i < rep_num; i++) {
         // Send outer
-//        printf("proc(%d) - before send\n", rank);
         requests_send = send_data(block, rank, proc_num, block_width, block_height);
         // Recv foreign
-//        printf("proc(%d) - before recv\n", rank);
         requests_recv = recv_data(block, rank, proc_num, block_width, block_height);
         // Process our (inner) block
-//        printf("proc(%d) - before inner compute\n", rank);
         compute_inner_values(block, tmp_block, block_width, block_height, filter);
         // Wait for our foreign
-//        printf("proc(%d) - before wait on recv\n", rank);
         wait_on_recv(requests_recv);
         // Process our (outer) block
-//        printf("proc(%d) - before outer compute\n", rank);
         compute_outer_values(block, tmp_block, block_width, block_height, filter);
         // Wait on send of our outer
-//        printf("proc(%d) - before wait on send\n", rank);
         wait_on_send(requests_send);
-        //sleep(rank * (rank + 2));
-        //printf("proc(%d) finished\n", rank);
-        //print_array(block, block_width, block_height);
         memcpy(block, tmp_block, block_width * block_height * sizeof(int));
     }
-//    sleep(rank * (rank + 2));
-//    printf("proc(%d) finished\n", rank);
-//    print_array(block, block_width, block_height);
     return block;
 }
 
@@ -87,7 +75,6 @@ void compute_inner_values(int* src_array, int* dest_array,
             continue;
         }
         dest_array[i] = calculate_filtered_pixel(i, src_array, width, height, filter);
-//        dest_array[i] = src_array[i];
     }
 }
 
@@ -107,16 +94,13 @@ void compute_outer_values(int* src_array, int* dest_array,
         }
         dest_array[i] =
             calculate_filtered_pixel(i, src_array, width, height, filter);
-//        dest_array[i] = src_array[i];
     }
     // Compute outer columns
     for (i = 2 * width + 1; i < array_size - 3 * width + 3; i += width)
     {
         dest_array[i] =
             calculate_filtered_pixel(i, src_array, width, height, filter);
-//        dest_array[i] = src_array[i];
         int right_idx = i + width - 3;
-//        dest_array[right_idx] = src_array[right_idx];
         dest_array[right_idx] =
             calculate_filtered_pixel(right_idx, src_array, width, height, filter);
     }
@@ -141,7 +125,6 @@ int calculate_filtered_pixel(int pixel_idx, int* src_array, int width,
         sum += (src_array[j] * filter[z]) / filter_sum;
         z++;
     }
-//    return src_array[pixel_idx];
     if (sum > 255)
         return 255;
     else

@@ -29,16 +29,8 @@ int main()
 
     int block_width = img_width / sqrt(numprocs) + 2;
     int block_height = img_height / sqrt(numprocs) + 2;
-    // ---------------------------
-    // DEBUG PURPOSES
-//    int i;
-//    for (i = 0; i < block_width * block_height; i++) {
-//        block[i] = rank;
-//    }
-    // ---------------------------
 
     // Create new communicator (of Cartesian topology)
-//    printf("One dim: %d\n", ((int) sqrt(numprocs)));
     int dims[2] = {(int) sqrt(numprocs), (int) sqrt(numprocs)};
     int cyclic[2] = {1, 1};
     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, cyclic, 1, &CARTESIAN_COMM);
@@ -58,7 +50,7 @@ int main()
     sleep(2);
     MPI_Barrier(CARTESIAN_COMM);
 
-    block = process_img(block, block_width, block_height, 2);
+    block = process_img(block, block_width, block_height, 1);
     int* image = NULL;
     if (rank != 0) {
         MPI_Gather(block + block_width + 1, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
@@ -70,15 +62,10 @@ int main()
         FILE* output = fopen("output.raw", "wb");
         unsigned char* img_buffer = malloc(img_height * img_width *
                                         sizeof(unsigned char));
-        sleep(4);
-        //print_array(image, img_width, img_height);
-//        sleep(2);
+
         int i;
         for (i = 0; i < img_height * img_width; i++) {
             img_buffer[i] = (unsigned char) image[i];
-            //printf("%4u ", img_buffer[i]);
-            //if ((i != 0) && ((i + 1) % img_width == 0))
-             //   putchar('\n');
         }
         putchar('\n');
         fwrite(img_buffer, sizeof(char), img_height * img_width, output);

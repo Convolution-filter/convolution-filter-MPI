@@ -92,7 +92,6 @@ int* BW_initialization(const char* filename, int width, int height,
         return IMG_LOAD_FAILURE;
     }
 
-//    int* img_buffer = create_random_array(width, height);
     return img_buffer;
 }
 
