@@ -13,11 +13,26 @@
 MPI_Comm CARTESIAN_COMM;
 extern MPI_Datatype mpi_block, mpi_block_img;
 
-int main()
+/* Main arguments:
+ * 1. the image to be processed path/<filename>
+ * 2. the width of the image
+ * 3. the height of the image
+ * 4. number of times to apply the filter on the image
+ * 5. number of rounds to check for convergence
+ */
+
+int main(int argc, char *argv[])
 {
-    char filename[] = "waterfall_grey_1920_2520.raw";
-    int img_width = 1920;
-    int img_height = 2520;
+    if ( argc != 6 )
+    {
+        printf("wrong number of parameters given.\nexiting.");
+        return 1;
+    }
+    char* filename = argv[1];
+    int img_width = atoi(argv[2]);
+    int img_height = atoi(argv[3]);
+    int filter_rounds = atoi(argv[4]);
+    int convergence_rounds = atoi(argv[5]);
     int numprocs, rank;
 
     // Read image and send it
@@ -49,7 +64,7 @@ int main()
     sleep(2);
     MPI_Barrier(CARTESIAN_COMM);
 
-    block = process_img(block, block_width, block_height, 10, 2);
+    block = process_img(block, block_width, block_height, filter_rounds, convergence_rounds);
     int* image = NULL;
     if (rank != 0) {
         MPI_Gather(block + block_width + 1, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
