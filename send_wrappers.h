@@ -10,27 +10,20 @@
 extern "C" {
 #endif
 
-//    int send_data()
     typedef enum direction {
-        up_left,
-        up,
-        up_right,
+        upper_left,
+        upper,
+        upper_right,
         right,
-        down_right,
-        down,
-        down_left,
+        lower_right,
+        lower,
+        lower_left,
         left
     } direction;
     
-    typedef enum corner {
-        upper_left,
-        upper_right,
-        lower_right,
-        lower_left
-    } corner;
-    
-    int send_data(int* src, MPI_Datatype mpi_column, MPI_Datatype mpi_row, 
-    int my_rank, int proc_num, int width, int height);
+    MPI_Request* send_data(int* src, int my_rank, int proc_num, int width, int height);
+    void wait_on_send(MPI_Request* requests);
+    void assign_requests(MPI_Request* requests, int* idx, MPI_Request req_val);
 
 #ifdef	__cplusplus
 }

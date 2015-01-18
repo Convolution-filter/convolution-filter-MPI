@@ -13,9 +13,6 @@ typedef enum errors {
     IMG_LOAD_FAILURE
 } errors;
 
-typedef enum tags {
-    IMG_BLOCK_MSG
-} tags;
 
 int* initalization_phase(const char* filename, int width, int height, 
                         unsigned int isBW);

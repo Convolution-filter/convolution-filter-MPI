@@ -40,6 +40,7 @@ int* initalization_phase(const char* filename, int width, int height,
     int img_block_height = height / proc_per_row;
     
     // Create datatype for columns
+    printf("IMG BLOCK HEIGHT == %d\n", img_block_height);
     MPI_Type_vector(img_block_height, 1, img_block_width + 2, MPI_INT, 
         &mpi_column);
     MPI_Type_commit(&mpi_column);
@@ -152,8 +153,8 @@ int** send_image(int* img_buffer, int width, int height, int proc_num,
     for (i = 1; i < proc_num; i++) {
         int* img_block = extract_img_block(img_buffer, width * height,
                         proc_per_row, i, img_block_width, img_block_height);
-        MPI_Isend(img_block, img_block_width * img_block_height, mpi_block_img, 
-            i, IMG_BLOCK_MSG, MPI_COMM_WORLD, &((*requests)[i - 1]));
+//        MPI_Isend(img_block, img_block_width * img_block_height, mpi_block_img, 
+//            i, IMG_BLOCK_MSG, MPI_COMM_WORLD, &((*requests)[i - 1]));
     }
     return img_blocks;
 }

@@ -11,22 +11,31 @@
 #include "initializations.h"
 
 MPI_Comm CARTESIAN_COMM;
+extern MPI_Datatype mpi_block, mpi_block_img;
 
 int main()
 {
     char filename[] = "waterfall_1920_2520.raw";
-    int img_width = 20;
-    int img_height = 40;
+    int img_width = 1920;
+    int img_height = 2520;
     int numprocs, rank;
-    int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
     
     // Read image and send it
     int *block = initalization_phase(filename, img_width, img_height, 1);
+    
+
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     
     int block_width = img_width / sqrt(numprocs) + 2;
     int block_height = img_height / sqrt(numprocs) + 2;
+    // ---------------------------
+    // DEBUG PURPOSES
+//    int i;
+//    for (i = 0; i < block_width * block_height; i++) {
+//        block[i] = rank;
+//    }
+    // ---------------------------
     
     // Create new communicator (of Cartesian topology)
     printf("One dim: %d\n", ((int) sqrt(numprocs)));
@@ -46,11 +55,29 @@ int main()
         MPI_Finalize();
         return EXIT_FAILURE;
     }
+    sleep(2);
+    MPI_Barrier(CARTESIAN_COMM);
     
-    MPI_Barrier(MPI_COMM_WORLD);
-//    compute_internal_values(ar,dest, block_width, block_heigth,filter);
-//    compute_outer_values(ar, dest, block_width, block_heigth, filter);
-    
+    block = process_img(block, block_width, block_height, 1);
+    int* image = NULL;
+    if (rank != 0) {
+        MPI_Gather(block, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
+    }
+    else {
+        image = malloc(img_width * img_height * sizeof(int));
+        MPI_Gather(block, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
+        // write BW image as raw file
+        FILE* output = fopen("output.raw", "wb");
+        char* img_buffer = malloc(img_height * img_width);
+        int i;
+        for (i = 0; i < img_height * img_width; i++) {
+            img_buffer[i] = (char) image[i];
+        }
+        fwrite(img_buffer, sizeof(char), img_height * img_width, output);
+        fclose(output);
+        free(img_buffer);
+        free(image);
+    }
     MPI_Finalize();
     return 0;
 }

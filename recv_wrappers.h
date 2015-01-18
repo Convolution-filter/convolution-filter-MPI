@@ -12,8 +12,8 @@
 extern "C" {
 #endif
     
-MPI_Request* recv_data(int* buffer, MPI_Datatype mpi_column, 
-    MPI_Datatype mpi_row, int width, int height, int msg_tag, int my_rank);
+MPI_Request* recv_data(int* buffer, int my_rank, int proc_num, int width, 
+                        int height);
 void wait_on_recv(MPI_Request* requests);
 
 
