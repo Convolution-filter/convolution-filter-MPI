@@ -4,3 +4,4 @@ dist/
 Makefile
 nbproject/
 waterfall*
+parallel
