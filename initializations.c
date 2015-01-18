@@ -11,6 +11,7 @@
 //-------------------------------------------
 int* BW_initialization(const char* filename, int width, int height,
         int img_block_width, int img_block_height, int proc_num);
+int** RGB_initialization(const char* filename, int width, int height);
 int** send_image(int* img_buffer, int width, int height, int proc_num, 
                 int img_block_width, int img_block_height,
                 int proc_per_row, MPI_Request** requests);
@@ -23,7 +24,7 @@ int* read_BW_img(const char* filename, int width, int height);
 //-------------------------------------------
 // Datatypes 
 //-------------------------------------------
-MPI_Datatype mpi_column, mpi_row, mpi_block_img;
+MPI_Datatype mpi_column, mpi_row, mpi_block_img, mpi_block;
 
 
 //-------------------------------------------
@@ -47,106 +48,49 @@ int* initalization_phase(const char* filename, int width, int height,
     MPI_Type_vector(1, img_block_width * img_block_height, 0, MPI_INT, 
         &mpi_block_img);
     MPI_Type_commit(&mpi_block_img);
+    MPI_Type_vector(img_block_height, img_block_width, 
+            img_block_width + 2, MPI_INT, &mpi_block);
+    MPI_Type_commit(&mpi_block);
     
     // Start separating master and slave procs
     int rank;
+    int* block = NULL;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     if (rank == 0) {
         if (isBW) {
             printf("Master: about to initialize BW\n");
-            int* img_block = 
+            int* img_buffer = 
                     BW_initialization(filename, width, height,
                         img_block_width, img_block_height, proc_num);
-            int block_length = 
-                    (img_block_width + 2) * (img_block_height + 2);
-            int *block = malloc(block_length * sizeof(int));
-            memset(block, '\0', block_length * sizeof(int));
-            // "Insert" img_block into block
-            int i, idx = 0;
-            for (i = img_block_width + 3; i < block_length; i++) {
-                if ((i + 1) % img_block_width + 2 == 0) {
-                    i++;
-                    continue;
-                }
-                block[i] = img_block[idx];
-                idx++;
-            }
-            printf("Master: got my block and about to print it\n");
-//            print_array(block, img_block_width + 2, img_block_height + 2);
-            return block;
+            block = malloc((img_block_width + 2) * 
+                        (img_block_height + 2) * sizeof(int));
+            MPI_Scatter(img_buffer, 1, mpi_block_img, 
+                block + img_block_width + 3, 1, mpi_block, 
+                0, MPI_COMM_WORLD);
         }
     }
     else {
-        int* block;
-        MPI_Datatype mpi_block;
-        MPI_Type_vector(img_block_height, img_block_width, 
-            img_block_width + 2, MPI_INT, &mpi_block);
-        MPI_Type_commit(&mpi_block);
-        MPI_Request request;
-        MPI_Status status;
         if (isBW) {
             int block_length = 
                     (img_block_width + 2) * (img_block_height + 2);
             block = malloc(block_length * sizeof(int));
             memset(block, '\0', block_length * sizeof(int));
-            MPI_Irecv(block + img_block_width + 3, 1, mpi_block_img, 0, 
-                IMG_BLOCK_MSG, MPI_COMM_WORLD, &request);
+            MPI_Scatter(NULL, 1, mpi_block_img, block + img_block_width + 3, 
+                1, mpi_block, 0, MPI_COMM_WORLD);
         }
-        printf("Slave - waiting for receive of block\n");
-        MPI_Wait(&request, &status);
-        printf("Slave: woke up and going to print the gifts\n");
-        print_array(block, img_block_width + 2, img_block_height + 2);
-        // Return block
-        return block;
     }
-    // Get img_block and return block (add noise)
-//    return img_block;
+    return block;
 }
 
 int* BW_initialization(const char* filename, int width, int height, 
                         int img_block_width, int img_block_height,
                         int proc_num) {
     // Read image
-    int* img_buffer = read_BW_img(filename, width, height);
-    if (img_buffer == NULL)
-        return IMG_LOAD_FAILURE;
-    int proc_per_row = sqrt(proc_num);
-    // Send image blocks to all the other processes
-    MPI_Request* requests;
-    int** img_blocks = send_image(img_buffer, width, height, proc_num,
-                            img_block_width, img_block_height, proc_per_row,
-                            &requests);
-    printf("Master sent image\n");
-    // Get your own block
-    int* img_block = extract_img_block(img_buffer, width * height,
-                        proc_per_row, 0, img_block_width, img_block_height);
-    // Wait for all the processes to receive them
-    printf("Master got my block and will wait for other procs to receive\n");
-    MPI_Status *statuses = malloc((proc_num - 1) * sizeof(MPI_Status));
-    int i;
-    for (i = 0; i < proc_num - 1; i++) {
-        printf("Request[%d] == %u\n", i, requests[i]);
-    }
-    for (i = 0; i < proc_num - 1; i++) {
-        printf("statuses[%d] == {tag: %d, error: %d}\n", i, statuses[i].MPI_TAG,
-            statuses[i].MPI_ERROR);
-    }
-    for (i = 0; i < proc_num - 1; i++) {
-        printf("Waiting for proc(%d)\n", i + 1);
-        MPI_Wait(&(requests[i]), &(statuses[i]));
-    }
-//    MPI_Waitall(proc_num - 1, requests, statuses);
-    printf("Master: waited for other procs\n");
-    free(requests);
-    free(statuses);
-//    int i;
-    for (i = 0; i < proc_num - 1; i++) {
-        free(img_blocks[i]);
-        img_blocks[i] = NULL;
-    }
-    free(img_blocks);
-    img_blocks = NULL;
-    return img_block;
+//    int* img_buffer = read_BW_img(filename, width, height);
+//    if (img_buffer == NULL)
+//        return IMG_LOAD_FAILURE;
+    int* img_buffer = create_random_array(width, height);
+    return img_buffer;
 }
 
 /*
@@ -169,8 +113,6 @@ int* extract_img_block(int* img, int img_length, int proc_per_row,
     // and the +1 from the end
     int idx = 0;
     for (i = start_idx, j = 1; i < img_length && j<=img_block_width*img_block_height; i++,j++) {
-//        printf("i == %d\n", i);
-        // Crashes at idx == 610560 && i == 1222080 (the 2nd is the one that crashes it)
         buffer[idx] = img[i];
         idx++;
         if (j%img_block_width==0 && j!=0){
@@ -181,10 +123,11 @@ int* extract_img_block(int* img, int img_length, int proc_per_row,
     return buffer;
 }
 
-int RGB_initialization(const char* filename, int width, int height) {
+int** RGB_initialization(const char* filename, int width, int height) {
     int** img_buffers = read_RGB_img(filename, width, height);
     if (img_buffers == NULL)
         return IMG_LOAD_FAILURE;
+    return img_buffers;
 }
 
 /*

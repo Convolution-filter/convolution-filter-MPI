@@ -14,11 +14,11 @@ MPI_Comm CARTESIAN_COMM;
 
 int main()
 {
-    int numprocs, rank, namelen;
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
-    int block_width = 15;
-    int block_heigth = 30;
-    int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
+    int numprocs, rank;
+//    char processor_name[MPI_MAX_PROCESSOR_NAME];
+//    int block_width = 15;
+//    int block_heigth = 30;
+//    int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
     
 //    int *ar = create_random_array(block_width, block_heigth);
 //    print_array(ar, block_width, block_heigth);
@@ -32,14 +32,12 @@ int main()
 //    MPI_Get_processor_name(processor_name, &namelen);
     
     // Read image and send it
-    int *block = initalization_phase("waterfall_1920_2520.raw", 1920, 2520, 1);
+    int *block = initalization_phase("waterfall_1920_2520.raw", 20, 40, 1);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if (rank != 0) {
-        sleep(rank + rank);
-        printf("I'm slave(%d)", rank);
-        print_array(block, 1920/numprocs, 2520/numprocs);
-    }
+    sleep(rank + rank);
+    printf("I'm slave(%d)\n", rank);
+    print_array(block, 20/sqrt(numprocs) + 2, 40/sqrt(numprocs) + 2);
     
     // Create new communicator (of Cartesian topology)
 //    printf("One dim: %d\n", ((int) sqrt(numprocs)));

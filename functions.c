@@ -14,7 +14,6 @@ int* create_random_array(int width, int height)
     int array_size = width * height;
     int* array = malloc(array_size * sizeof(int));
     int i;
-    int content = 11;
     srand(time(NULL));
     for ( i = 0; i < array_size; i++)
     {
