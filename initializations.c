@@ -4,7 +4,7 @@
 #include <string.h>
 #include <math.h>
 #include "initializations.h"
-#include "functions.h"
+#include "processing_img.h"
 
 //-------------------------------------------
 // Forward declarations

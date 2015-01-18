@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include "functions.h"
+#include "processing_img.h"
 
 #define filter_size 3
 
