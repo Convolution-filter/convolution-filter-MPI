@@ -8,7 +8,7 @@
 #include "send_wrappers.h"
 #include "recv_wrappers.h"
 
-#define filter_size 3
+#define filter_sum 16
 int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
 
 // Forward declarations
@@ -58,9 +58,9 @@ int* process_img(int* block, int block_width, int block_height, int rep_num) {
         // Wait on send of our outer
 //        printf("proc(%d) - before wait on send\n", rank);
         wait_on_send(requests_send);
-//        sleep(rank * (rank + 2));
-//        printf("proc(%d) finished\n", rank);
-//        print_array(block, block_width, block_height);
+        sleep(rank * (rank + 2));
+        printf("proc(%d) finished\n", rank);
+        print_array(block, block_width, block_height);
         memcpy(block, tmp_block, block_width * block_height * sizeof(int));
     }
 //    sleep(rank * (rank + 2));
@@ -136,10 +136,13 @@ int calculate_filtered_pixel(int pixel_idx, int* src_array, int width,
             j = pixel_idx + coef * width - 2;
             continue;
         }
-        sum += src_array[j] * filter[z] / (filter_size * filter_size);
+        sum += src_array[j] * filter[z] / filter_sum;
         z++;
     }
-    return (sum > 255) ? 255 : sum;
+    if (sum > 255)
+        return 255;
+    else
+        return sum;
 }
 
 

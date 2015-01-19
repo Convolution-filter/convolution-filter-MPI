@@ -40,7 +40,6 @@ int* initalization_phase(const char* filename, int width, int height,
     int img_block_height = height / proc_per_row;
     
     // Create datatype for columns
-    printf("IMG BLOCK HEIGHT == %d\n", img_block_height);
     MPI_Type_vector(img_block_height, 1, img_block_width + 2, MPI_INT, 
         &mpi_column);
     MPI_Type_commit(&mpi_column);

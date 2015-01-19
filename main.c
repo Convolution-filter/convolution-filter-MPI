@@ -16,8 +16,8 @@ extern MPI_Datatype mpi_block, mpi_block_img;
 int main()
 {
     char filename[] = "waterfall_1920_2520.raw";
-    int img_width = 1920;
-    int img_height = 2520;
+    int img_width = 20;
+    int img_height = 40;
     int numprocs, rank;
     
     // Read image and send it
@@ -38,7 +38,7 @@ int main()
     // ---------------------------
     
     // Create new communicator (of Cartesian topology)
-    printf("One dim: %d\n", ((int) sqrt(numprocs)));
+//    printf("One dim: %d\n", ((int) sqrt(numprocs)));
     int dims[2] = {(int) sqrt(numprocs), (int) sqrt(numprocs)};
     int cyclic[2] = {1, 1};
     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, cyclic, 1, &CARTESIAN_COMM);
@@ -48,7 +48,7 @@ int main()
     if (CARTESIAN_COMM != MPI_COMM_NULL) {
         MPI_Cart_coords(CARTESIAN_COMM, rank, 2, coords);
         MPI_Cart_rank(CARTESIAN_COMM, coords, &rank);
-        printf("%8d %8d %8d\n", coords[0], coords[1], rank);
+//        printf("%8d %8d %8d\n", coords[0], coords[1], rank);
     }
     else {
         printf("Could not properly set CARTESIAN_COMM_WORLD\n");
@@ -68,11 +68,20 @@ int main()
         MPI_Gather(block, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
         // write BW image as raw file
         FILE* output = fopen("output.raw", "wb");
-        char* img_buffer = malloc(img_height * img_width);
+        unsigned char* img_buffer = malloc(img_height * img_width * 
+                                        sizeof(unsigned char));
+        sleep(4);
+        print_array(image, img_width, img_height);
+        printf("\n\n\n\n\n\n\n\n\n");
+//        sleep(2);
         int i;
         for (i = 0; i < img_height * img_width; i++) {
-            img_buffer[i] = (char) image[i];
+            img_buffer[i] = (unsigned char) image[i];
+            printf("%4u ", img_buffer[i]);
+            if ((i != 0) && ((i + 1) % img_width == 0))
+                putchar('\n');
         }
+        putchar('\n');
         fwrite(img_buffer, sizeof(char), img_height * img_width, output);
         fclose(output);
         free(img_buffer);
