@@ -72,7 +72,6 @@ int main()
                                         sizeof(unsigned char));
         sleep(4);
         //print_array(image, img_width, img_height);
-        printf("\n\n\n\n\n\n\n\n\n");
 //        sleep(2);
         int i;
         for (i = 0; i < img_height * img_width; i++) {

@@ -9,7 +9,9 @@
 #include "recv_wrappers.h"
 
 #define filter_sum 9
-int filter[9] = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
+//int filter[9] = {0,1,0,1,-4,0,1,0}; // Edge detect
+//int filter[9] = {0,-1,0,-1,5,-1,0,-1,0};
 
 // Forward declarations
 int calculate_filtered_pixel(int pixel_idx, int* src_array, int width,
@@ -139,7 +141,7 @@ int calculate_filtered_pixel(int pixel_idx, int* src_array, int width,
         sum += (src_array[j] * filter[z]) / filter_sum;
         z++;
     }
-    return src_array[pixel_idx];
+//    return src_array[pixel_idx];
     if (sum > 255)
         return 255;
     else
