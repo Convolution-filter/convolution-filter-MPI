@@ -18,7 +18,9 @@ int filter[9] = {0,1,0,1,-4,0,1,0}; // Edge detect
 
 // Forward declarations
 int calculate_filtered_pixel(int pixel_idx, int* src_array, int width,
-    int height, int* filter);
+                            int height, int* filter);
+int compare_blocks(int* first_array, int* second_array, int block_width,
+                    int block_height);
 
 int* create_random_array(int width, int height)
 {
@@ -37,14 +39,14 @@ int* create_random_array(int width, int height)
 }
 
 
-int* process_img(int* block, int block_width, int block_height, int rep_num) {
+int* process_img(int* block, int block_width, int block_height, int rep_num, int cnv_rounds) {
     int i, rank, proc_num;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &proc_num);
     MPI_Request* requests_send, *requests_recv;
     int* tmp_block = malloc(block_width * block_height * sizeof(int));
     memset(tmp_block, '\0', block_width * block_height * sizeof(int));
-    for (i = 0; i < rep_num; i++) {
+    for (i = 1; i <= rep_num; i++) {
         // Send outer
         requests_send = send_data(block, rank, proc_num, block_width, block_height);
         // Recv foreign
@@ -55,6 +57,31 @@ int* process_img(int* block, int block_width, int block_height, int rep_num) {
         wait_on_recv(requests_recv);
         // Process our (outer) block
         compute_outer_values(block, tmp_block, block_width, block_height, filter);
+        //check for convergence
+        if ( i % cnv_rounds == 0)
+        {
+            int* cnv_buffer;
+            int convergence = compare_blocks(block, tmp_block, block_width, block_height);
+            if (rank == 0)
+            {
+                cnv_buffer = malloc(proc_num * sizeof(int));
+                MPI_Gather(&convergence, 1, MPI_INT, cnv_buffer, 1, MPI_INT, 0, MPI_COMM_WORLD);
+                int cnv_sum = 0, j;
+                for ( j = 0; j < proc_num; j++)
+                    cnv_sum += cnv_buffer[j];
+                MPI_Bcast( &cnv_sum, 1, MPI_INT, 0, MPI_COMM_WORLD);
+                if (cnv_sum > 0)
+                    break;
+            }
+            else
+            {
+                int cnv_sum = 0;
+                MPI_Gather(&convergence, 1, MPI_INT, cnv_buffer, 1, MPI_INT, 0, MPI_COMM_WORLD);
+                MPI_Bcast( &cnv_sum, 1, MPI_INT, 0, MPI_COMM_WORLD);
+                if (cnv_sum > 0)
+                    break;
+            }
+        }
         // Wait on send of our outer
         wait_on_send(requests_send);
         memcpy(block, tmp_block, block_width * block_height * sizeof(int));
@@ -148,4 +175,17 @@ void print_array(int* arr, int width, int height)
         printf("%4d ", arr[i]);
     }
     putchar('\n');
+}
+
+//  return 0 if blocks are equal
+//  return 1 if blocks are diferent
+int compare_blocks(int* first_array, int* second_array, int block_width, int block_height)
+{
+    int i;
+    for ( i = block_width + 1; i < block_height * block_width - block_width - 1; i++)
+    {
+        if (first_array[i] != second_array[i])
+            return 1;
+    }
+    return 0;
 }
