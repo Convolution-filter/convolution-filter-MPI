@@ -18,11 +18,12 @@ extern MPI_Datatype mpi_block, mpi_block_img;
  * 2. the width of the image
  * 3. the height of the image
  * 4. number of times to apply the filter on the image
+ * 5. number of rounds to check for convergence
  */
 
 int main(int argc, char *argv[])
 {
-    if ( argc != 5 )
+    if ( argc != 6 )
     {
         printf("wrong number of parameters given.\nexiting.");
         return 1;
@@ -31,6 +32,7 @@ int main(int argc, char *argv[])
     int img_width = atoi(argv[2]);
     int img_height = atoi(argv[3]);
     int filter_rounds = atoi(argv[4]);
+    int convergence_rounds = atoi(argv[5]);
     int numprocs, rank;
 
     // Read image and send it
@@ -53,6 +55,7 @@ int main(int argc, char *argv[])
     if (CARTESIAN_COMM != MPI_COMM_NULL) {
         MPI_Cart_coords(CARTESIAN_COMM, rank, 2, coords);
         MPI_Cart_rank(CARTESIAN_COMM, coords, &rank);
+//        printf("%8d %8d %8d\n", coords[0], coords[1], rank);
     }
     else {
         printf("Could not properly set CARTESIAN_COMM_WORLD\n");
@@ -62,7 +65,7 @@ int main(int argc, char *argv[])
     sleep(2);
     MPI_Barrier(CARTESIAN_COMM);
 
-    block = process_img(block, block_width, block_height, filter_rounds);
+    block = process_img(block, block_width, block_height, filter_rounds, convergence_rounds);
     int* image = NULL;
     if (rank != 0) {
         MPI_Gather(block + block_width + 1, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
@@ -79,6 +82,7 @@ int main(int argc, char *argv[])
         for (i = 0; i < img_height * img_width; i++) {
             img_buffer[i] = (unsigned char) image[i];
         }
+        putchar('\n');
         fwrite(img_buffer, sizeof(char), img_height * img_width, output);
         fclose(output);
         free(img_buffer);
