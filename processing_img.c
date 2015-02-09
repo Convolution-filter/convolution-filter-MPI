@@ -39,7 +39,7 @@ int* create_random_array(int width, int height)
 }
 
 
-int* process_img(int* block, int block_width, int block_height, int rep_num, int cnv_rounds) {
+int* process_img(int* block, int block_width, int block_height, int rep_num, int cnv_option, int cnv_rounds) {
     int i, rank, proc_num;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &proc_num);
@@ -58,7 +58,7 @@ int* process_img(int* block, int block_width, int block_height, int rep_num, int
         // Process our (outer) block
         compute_outer_values(block, tmp_block, block_width, block_height, filter);
         //check for convergence
-        if ( i % cnv_rounds == 0)
+        if ( cnv_option && i % cnv_rounds == 0)
         {
             int* cnv_buffer;
             int convergence = compare_blocks(block, tmp_block, block_width, block_height);
