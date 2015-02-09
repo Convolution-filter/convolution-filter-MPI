@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
     }
     sleep(2);
     MPI_Barrier(CARTESIAN_COMM);
+    double start_time = MPI_Wtime();
 
     block = process_img(block, block_width, block_height, filter_rounds, convergence_option, convergence_rounds);
     int* image = NULL;
@@ -84,6 +85,8 @@ int main(int argc, char *argv[])
     else {
         image = malloc(img_width * img_height * sizeof(int));
         MPI_Gather(block + block_width + 1, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
+        double end_time = MPI_Wtime();
+        printf("elapsed seconds: %f\n", end_time - start_time);
         // write BW image as raw file
         FILE* output = fopen("output.raw", "wb");
         unsigned char* img_buffer = malloc(img_height * img_width *
