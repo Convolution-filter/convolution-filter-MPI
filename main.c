@@ -7,7 +7,6 @@
 #include "processing_img.h"
 #include "send_wrappers.h"
 #include "recv_wrappers.h"
-#include "hello_mpi.h"
 #include "initializations.h"
 
 MPI_Comm CARTESIAN_COMM;
@@ -105,7 +104,7 @@ int main(int argc, char *argv[])
             MPI_Gather(block + block_width + 1, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
             double end_time = MPI_Wtime();
 
-            printf("elapsed seconds: %f\n", end_time - start_time);
+            printf("%f", end_time - start_time);
             // write BW image as raw file
             FILE* output = fopen("output.raw", "wb");
             unsigned char* img_buffer = malloc(img_height * img_width *
