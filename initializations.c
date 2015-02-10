@@ -245,8 +245,8 @@ int** read_RGB_img(const char* filename, int width, int height) {
         fprintf(stderr, "read_RGB_img - Could open image file\n");
         return NULL;
     }
-    int *img = NULL;
-    img = malloc(width * height * 3 * sizeof(int));
+    unsigned char *img = NULL;
+    img = malloc(width * height * 3);
     if (img == NULL) {
         fprintf(stderr, "read_RGB_img - Could not allocate img buffer\n");
         return NULL;
@@ -258,7 +258,6 @@ int** read_RGB_img(const char* filename, int width, int height) {
         fclose(img_file);
         return NULL;
     }
-    fclose(img_file);
 
     int** rgb_buffers = malloc(3 * sizeof(int*));
     if (rgb_buffers == NULL) {
