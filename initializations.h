@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   initializations.h
  */
 
@@ -14,7 +14,7 @@ typedef enum errors {
 } errors;
 
 
-int* initalization_phase(const char* filename, int width, int height, 
+int** initalization_phase(const char* filename, int width, int height,
                         unsigned int isBW);
 
 

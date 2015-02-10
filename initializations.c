@@ -30,7 +30,7 @@ MPI_Datatype mpi_column, mpi_row, mpi_block_img, mpi_block;
 //-------------------------------------------
 // Methods
 //-------------------------------------------
-int* initalization_phase(const char* filename, int width, int height,
+int** initalization_phase(const char* filename, int width, int height,
                         unsigned int isBW) {
     int proc_num = initialize_MPI();
 
@@ -68,6 +68,22 @@ int* initalization_phase(const char* filename, int width, int height,
                 block + img_block_width + 3, 1, mpi_block,
                 0, MPI_COMM_WORLD);
         }
+        else
+        {
+            printf("Master: about to initialize RGB\n");
+            int** rgb_buffer = RGB_initialization(filename, width, height);
+            int** rgb_block = malloc(3* sizeof(int*));
+            int i;
+            for (i = 0; i < 3 ; i++)
+            {
+                rgb_block[i] = malloc((img_block_width + 2) *
+                        (img_block_height + 2) * sizeof(int));
+                MPI_Scatter(rgb_buffer[i], 1, mpi_block_img,
+                    rgb_block[i] + img_block_width + 3, 1, mpi_block,
+                    0, MPI_COMM_WORLD);
+            }
+            return rgb_block;
+        }
     }
     else {
         if (isBW) {
@@ -78,8 +94,25 @@ int* initalization_phase(const char* filename, int width, int height,
             MPI_Scatter(NULL, 1, mpi_block_img, block + img_block_width + 3,
                 1, mpi_block, 0, MPI_COMM_WORLD);
         }
+        else
+        {
+            int block_length =
+                    (img_block_width + 2) * (img_block_height + 2);
+            int** rgb_block = malloc(3* sizeof(int*));
+            int i;
+            for (i = 0; i < 3 ; i++)
+            {
+                rgb_block[i] = malloc(block_length * sizeof(int));
+                memset(rgb_block[i], '\0', block_length * sizeof(int));
+                MPI_Scatter(NULL, 1, mpi_block_img, rgb_block[i] + img_block_width + 3,
+                            1, mpi_block, 0, MPI_COMM_WORLD);
+            }
+            return rgb_block;
+        }
     }
-    return block;
+    //handling of BW return (only)
+    int** rblock = &block;
+    return rblock;
 }
 
 int* BW_initialization(const char* filename, int width, int height,
@@ -213,12 +246,12 @@ int** read_RGB_img(const char* filename, int width, int height) {
         return NULL;
     }
     int *img = NULL;
-    img = malloc(width * height * 3);
+    img = malloc(width * height * 3 * sizeof(int));
     if (img == NULL) {
         fprintf(stderr, "read_RGB_img - Could not allocate img buffer\n");
         return NULL;
     }
-    if (fread(img, 1, width * height * 3, img_file) < width * height) {
+    if (fread(img, 1, width * height * 3, img_file) < 3 * width * height) {
         fprintf(stderr, "read_RGB_img - Sth went wrong with image reading\n");
         free(img);
         img = NULL;
@@ -235,7 +268,7 @@ int** read_RGB_img(const char* filename, int width, int height) {
         img = NULL;
         return NULL;
     }
-    int* red = malloc(width * height);
+    int* red = malloc(width * height * sizeof(int));
     if (red == NULL) {
         fprintf(stderr, "read_RGB_img - Failed to allocate space for "
             "buffers\n");
@@ -245,7 +278,7 @@ int** read_RGB_img(const char* filename, int width, int height) {
         rgb_buffers = NULL;
         return NULL;
     }
-    int* green = malloc(width * height);
+    int* green = malloc(width * height * sizeof(int));
     if (green == NULL) {
         fprintf(stderr, "read_RGB_img - Failed to allocate space for "
             "buffers\n");
@@ -257,7 +290,7 @@ int** read_RGB_img(const char* filename, int width, int height) {
         red = NULL;
         return NULL;
     }
-    int* blue = malloc(width * height);
+    int* blue = malloc(width * height * sizeof(int));
     if (blue == NULL) {
         fprintf(stderr, "read_RGB_img - Failed to allocate space for "
             "buffers\n");
@@ -271,11 +304,11 @@ int** read_RGB_img(const char* filename, int width, int height) {
         green = NULL;
         return NULL;
     }
-    int i;
-    for (i = 0; i < width * height * 3; i += 3) {
-        red[i] = img[i];
-        green[i + 1] = img[i + 1];
-        blue[i + 2] = img[i + 2];
+    int i, j;
+    for (i = 0 , j = 0; j < width * height; i += 3, j++) {
+        red[j] = img[i];
+        green[j] = img[i + 1];
+        blue[j] = img[i + 2];
     }
     rgb_buffers[0] = red;
     rgb_buffers[1] = green;

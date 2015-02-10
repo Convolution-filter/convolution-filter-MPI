@@ -8,10 +8,12 @@
 #include "send_wrappers.h"
 #include "recv_wrappers.h"
 
-#define filter_sum -1
+#define filter_sum 1
 //int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
-int filter[9] = {0,1,0,1,-4,0,1,0}; // Edge detect
+//int filter[9] = {0,1,0,1,-4,1,0,1,0}; // Edge detect
 //int filter[9] = {0,-1,0,-1,5,-1,0,-1,0};
+//int filter[9] = {0,0,0,-1,1,0,0,0,0};
+int filter[9] = {0,0,0,0,1,0,0,0,0};
 
 // Forward declarations
 int calculate_filtered_pixel(int pixel_idx, int* src_array, int width,
@@ -28,8 +30,8 @@ int* create_random_array(int width, int height)
     for (i = 0; i < array_size; i++)
     {
         int shade = rand() % 255;
-        array[i] = shade;
-//        array[i] = i;
+//        array[i] = shade;
+        array[i] = i;
     }
 
     return array;
