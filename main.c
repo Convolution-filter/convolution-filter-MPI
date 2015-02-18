@@ -32,13 +32,19 @@ int main(int argc, char *argv[])
 
     if ( argc < 7 )
     {
-        printf("wrong number of parameters given.\nexiting.");
+        printf("Wrong number of parameters given.\n");
+        printf("Usage: %s <img_filename> <width> <height> <number of repetitions"
+            "> <isBW image (0/1)> <withConvergence(0/1)> <number of rounds to "
+            "check for convergence [optional]>\n", argv[0]);
         return 1;
     }
     int convergence_option = atoi(argv[6]);
     if ( convergence_option == 1 && argc != 8 )
     {
-        printf("wrong number of parameters given.\nexiting.");
+        printf("Wrong number of parameters given.\n");
+        printf("Usage: %s <img_filename> <width> <height> <number of repetitions"
+            "> <isBW image (0/1)> <withConvergence(0/1)> <number of rounds to "
+            "check for convergence [optional]>\n", argv[0]);
         return 1;
     }
     char* filename = argv[1];
