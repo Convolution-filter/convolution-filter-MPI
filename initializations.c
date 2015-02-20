@@ -58,7 +58,7 @@ int** initalization_phase(const char* filename, int width, int height,
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     if (rank == 0) {
         if (isBW) {
-            printf("Master: about to initialize BW\n");
+            //printf("Master: about to initialize BW\n");
             int* img_buffer =
                     BW_initialization(filename, width, height,
                         img_block_width, img_block_height, proc_num);
@@ -70,7 +70,7 @@ int** initalization_phase(const char* filename, int width, int height,
         }
         else
         {
-            printf("Master: about to initialize RGB\n");
+            //printf("Master: about to initialize RGB\n");
             int** rgb_buffer = RGB_initialization(filename, width, height);
             int** rgb_block = malloc(3* sizeof(int*));
             int i;
@@ -139,8 +139,8 @@ int* extract_img_block(int* img, int img_length, int proc_per_row,
     int start_idx =
         current_row * img_block_height * img_block_width * proc_per_row
                     + current_col * img_block_width;
-    printf("Start_idx == %d\n", start_idx);
-    printf("max_idx == %d\n", img_block_width * img_block_height);
+    //printf("Start_idx == %d\n", start_idx);
+    //printf("max_idx == %d\n", img_block_width * img_block_height);
     int* buffer = NULL;
     buffer = malloc(img_block_width * img_block_height * sizeof(int));
     memset(buffer, '\0', img_block_width * img_block_height * sizeof(int));
