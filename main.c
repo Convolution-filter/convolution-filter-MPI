@@ -65,7 +65,6 @@ int main(int argc, char *argv[])
     else
         rgb_block = initalization_phase(filename, img_width, img_height, 0);
 
-
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -119,6 +118,7 @@ int main(int argc, char *argv[])
             free(img_buffer);
             free(image);
         }
+        free(block);
     }
     else
     {
@@ -171,11 +171,13 @@ int* process_img_wrapper(int* block, int block_width, int block_height, int filt
     int* image = NULL;
     if (rank != 0) {
         MPI_Gather(block + block_width + 1, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
+        free(block);
         return NULL;
     }
     else {
         image = malloc(img_width * img_height * sizeof(int));
         MPI_Gather(block + block_width + 1, 1, mpi_block, image, 1, mpi_block_img, 0, CARTESIAN_COMM);
+        free(block);
         return image;
     }
 }

@@ -67,6 +67,7 @@ int** initalization_phase(const char* filename, int width, int height,
             MPI_Scatter(img_buffer, 1, mpi_block_img,
                 block + img_block_width + 3, 1, mpi_block,
                 0, MPI_COMM_WORLD);
+            free(img_buffer);
         }
         else
         {
@@ -81,7 +82,9 @@ int** initalization_phase(const char* filename, int width, int height,
                 MPI_Scatter(rgb_buffer[i], 1, mpi_block_img,
                     rgb_block[i] + img_block_width + 3, 1, mpi_block,
                     0, MPI_COMM_WORLD);
+                free(rgb_buffer[i]);
             }
+            free(rgb_buffer);
             return rgb_block;
         }
     }
