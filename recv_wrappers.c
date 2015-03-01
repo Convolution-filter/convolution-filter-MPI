@@ -74,13 +74,13 @@ MPI_Request* recv_corner_pixels(int *buffer, int width, int height,
             "requests array\n", my_rank);
         return NULL;
     }
-    MPI_Irecv(buffer, 1, MPI_INT, rank_lower_right, upper_left,
+    MPI_Irecv(buffer, 1, MPI_INT, rank_upper_left, upper_left,
         CARTESIAN_COMM, &(requests[0]));
-    MPI_Irecv(buffer + width - 1, 1, MPI_INT, rank_lower_left, upper_right,
+    MPI_Irecv(buffer + width - 1, 1, MPI_INT, rank_upper_right, upper_right,
         CARTESIAN_COMM, &(requests[1]));
-    MPI_Irecv(buffer + width * height - 1, 1, MPI_INT, rank_upper_left,
+    MPI_Irecv(buffer + width * height - 1, 1, MPI_INT, rank_lower_right,
         lower_right, CARTESIAN_COMM, &(requests[2]));
-    MPI_Irecv(buffer + width * (height - 1), 1, MPI_INT, rank_upper_right,
+    MPI_Irecv(buffer + width * (height - 1), 1, MPI_INT, rank_lower_left,
         lower_left, CARTESIAN_COMM, &(requests[3]));
     return requests;
 }

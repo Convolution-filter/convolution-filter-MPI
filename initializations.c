@@ -30,7 +30,7 @@ MPI_Datatype mpi_column, mpi_row, mpi_block_img, mpi_block;
 //-------------------------------------------
 // Methods
 //-------------------------------------------
-int* initalization_phase(const char* filename, int width, int height,
+int** initalization_phase(const char* filename, int width, int height,
                         unsigned int isBW) {
     int proc_num = initialize_MPI();
 
@@ -58,7 +58,7 @@ int* initalization_phase(const char* filename, int width, int height,
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     if (rank == 0) {
         if (isBW) {
-            printf("Master: about to initialize BW\n");
+            //printf("Master: about to initialize BW\n");
             int* img_buffer =
                     BW_initialization(filename, width, height,
                         img_block_width, img_block_height, proc_num);
@@ -67,6 +67,25 @@ int* initalization_phase(const char* filename, int width, int height,
             MPI_Scatter(img_buffer, 1, mpi_block_img,
                 block + img_block_width + 3, 1, mpi_block,
                 0, MPI_COMM_WORLD);
+            free(img_buffer);
+        }
+        else
+        {
+            //printf("Master: about to initialize RGB\n");
+            int** rgb_buffer = RGB_initialization(filename, width, height);
+            int** rgb_block = malloc(3* sizeof(int*));
+            int i;
+            for (i = 0; i < 3 ; i++)
+            {
+                rgb_block[i] = malloc((img_block_width + 2) *
+                        (img_block_height + 2) * sizeof(int));
+                MPI_Scatter(rgb_buffer[i], 1, mpi_block_img,
+                    rgb_block[i] + img_block_width + 3, 1, mpi_block,
+                    0, MPI_COMM_WORLD);
+                free(rgb_buffer[i]);
+            }
+            free(rgb_buffer);
+            return rgb_block;
         }
     }
     else {
@@ -78,8 +97,25 @@ int* initalization_phase(const char* filename, int width, int height,
             MPI_Scatter(NULL, 1, mpi_block_img, block + img_block_width + 3,
                 1, mpi_block, 0, MPI_COMM_WORLD);
         }
+        else
+        {
+            int block_length =
+                    (img_block_width + 2) * (img_block_height + 2);
+            int** rgb_block = malloc(3* sizeof(int*));
+            int i;
+            for (i = 0; i < 3 ; i++)
+            {
+                rgb_block[i] = malloc(block_length * sizeof(int));
+                memset(rgb_block[i], '\0', block_length * sizeof(int));
+                MPI_Scatter(NULL, 1, mpi_block_img, rgb_block[i] + img_block_width + 3,
+                            1, mpi_block, 0, MPI_COMM_WORLD);
+            }
+            return rgb_block;
+        }
     }
-    return block;
+    //handling of BW return (only)
+    int** rblock = &block;
+    return rblock;
 }
 
 int* BW_initialization(const char* filename, int width, int height,
@@ -106,8 +142,8 @@ int* extract_img_block(int* img, int img_length, int proc_per_row,
     int start_idx =
         current_row * img_block_height * img_block_width * proc_per_row
                     + current_col * img_block_width;
-    printf("Start_idx == %d\n", start_idx);
-    printf("max_idx == %d\n", img_block_width * img_block_height);
+    //printf("Start_idx == %d\n", start_idx);
+    //printf("max_idx == %d\n", img_block_width * img_block_height);
     int* buffer = NULL;
     buffer = malloc(img_block_width * img_block_height * sizeof(int));
     memset(buffer, '\0', img_block_width * img_block_height * sizeof(int));
@@ -212,20 +248,19 @@ int** read_RGB_img(const char* filename, int width, int height) {
         fprintf(stderr, "read_RGB_img - Could open image file\n");
         return NULL;
     }
-    int *img = NULL;
+    unsigned char *img = NULL;
     img = malloc(width * height * 3);
     if (img == NULL) {
         fprintf(stderr, "read_RGB_img - Could not allocate img buffer\n");
         return NULL;
     }
-    if (fread(img, 1, width * height * 3, img_file) < width * height) {
+    if (fread(img, 1, width * height * 3, img_file) < 3 * width * height) {
         fprintf(stderr, "read_RGB_img - Sth went wrong with image reading\n");
         free(img);
         img = NULL;
         fclose(img_file);
         return NULL;
     }
-    fclose(img_file);
 
     int** rgb_buffers = malloc(3 * sizeof(int*));
     if (rgb_buffers == NULL) {
@@ -235,7 +270,7 @@ int** read_RGB_img(const char* filename, int width, int height) {
         img = NULL;
         return NULL;
     }
-    int* red = malloc(width * height);
+    int* red = malloc(width * height * sizeof(int));
     if (red == NULL) {
         fprintf(stderr, "read_RGB_img - Failed to allocate space for "
             "buffers\n");
@@ -245,7 +280,7 @@ int** read_RGB_img(const char* filename, int width, int height) {
         rgb_buffers = NULL;
         return NULL;
     }
-    int* green = malloc(width * height);
+    int* green = malloc(width * height * sizeof(int));
     if (green == NULL) {
         fprintf(stderr, "read_RGB_img - Failed to allocate space for "
             "buffers\n");
@@ -257,7 +292,7 @@ int** read_RGB_img(const char* filename, int width, int height) {
         red = NULL;
         return NULL;
     }
-    int* blue = malloc(width * height);
+    int* blue = malloc(width * height * sizeof(int));
     if (blue == NULL) {
         fprintf(stderr, "read_RGB_img - Failed to allocate space for "
             "buffers\n");
@@ -271,11 +306,11 @@ int** read_RGB_img(const char* filename, int width, int height) {
         green = NULL;
         return NULL;
     }
-    int i;
-    for (i = 0; i < width * height * 3; i += 3) {
-        red[i] = img[i];
-        green[i + 1] = img[i + 1];
-        blue[i + 2] = img[i + 2];
+    int i, j;
+    for (i = 0 , j = 0; j < width * height; i += 3, j++) {
+        red[j] = img[i];
+        green[j] = img[i + 1];
+        blue[j] = img[i + 2];
     }
     rgb_buffers[0] = red;
     rgb_buffers[1] = green;

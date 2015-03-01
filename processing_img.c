@@ -4,14 +4,19 @@
 #include <unistd.h>
 #include <mpi.h>
 #include <string.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #include "processing_img.h"
 #include "send_wrappers.h"
 #include "recv_wrappers.h"
 
-#define filter_sum -1
+#define filter_sum 1
 //int filter[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
-int filter[9] = {0,1,0,1,-4,0,1,0}; // Edge detect
-//int filter[9] = {0,-1,0,-1,5,-1,0,-1,0};
+//int filter[9] = {0,1,0,1,-4,1,0,1,0}; // Edge detect
+int filter[9] = {0,-1,0,-1,5,-1,0,-1,0};
+//int filter[9] = {0,0,0,-1,1,0,0,0,0};
+//int filter[9] = {0,0,0,0,1,0,0,0,0};
 
 // Forward declarations
 int calculate_filtered_pixel(int pixel_idx, int* src_array, int width,
@@ -36,7 +41,7 @@ int* create_random_array(int width, int height)
 }
 
 
-int* process_img(int* block, int block_width, int block_height, int rep_num, int cnv_rounds) {
+int* process_img(int* block, int block_width, int block_height, int rep_num, int cnv_option, int cnv_rounds) {
     int i, rank, proc_num;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &proc_num);
@@ -55,7 +60,7 @@ int* process_img(int* block, int block_width, int block_height, int rep_num, int
         // Process our (outer) block
         compute_outer_values(block, tmp_block, block_width, block_height, filter);
         //check for convergence
-        if ( i % cnv_rounds == 0)
+        if ( cnv_option && i % cnv_rounds == 0 )
         {
             int* cnv_buffer;
             int convergence = compare_blocks(block, tmp_block, block_width, block_height);
@@ -81,8 +86,11 @@ int* process_img(int* block, int block_width, int block_height, int rep_num, int
         }
         // Wait on send of our outer
         wait_on_send(requests_send);
-        memcpy(block, tmp_block, block_width * block_height * sizeof(int));
+        int* tmp = tmp_block;
+        tmp_block = block;
+        block = tmp;
     }
+    free(tmp_block);
     return block;
 }
 
@@ -92,6 +100,9 @@ void compute_inner_values(int* src_array, int* dest_array,
 {
     int i, row_number = 3;
     int array_size = width * height;
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(4)
+#endif
     for (i = 2 * width + 2; i < array_size - 2 * width - 2; i++)
     {
         if( i % (row_number * width - 2) == 0)
