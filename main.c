@@ -87,7 +87,6 @@ int main(int argc, char *argv[])
         MPI_Finalize();
         return EXIT_FAILURE;
     }
-    sleep(2);
     MPI_Barrier(CARTESIAN_COMM);
     double start_time = MPI_Wtime();
 
@@ -105,7 +104,7 @@ int main(int argc, char *argv[])
 
             printf("%f\n", end_time - start_time);
             // write BW image as raw file
-            FILE* output = fopen("output.raw", "wb");
+            FILE* output = fopen("/tmp/output.raw", "wb");
             unsigned char* img_buffer = malloc(img_height * img_width *
                                             sizeof(unsigned char));
 
@@ -141,7 +140,7 @@ int main(int argc, char *argv[])
                 image_buffer[i] = convert_img(rgb_img_buffer[i], img_height, img_width);
                 free(rgb_img_buffer[i]);
             }
-            FILE* output = fopen("output.raw", "wb");
+            FILE* output = fopen("/tmp/output.raw", "wb");
             unsigned char* image = malloc( 3 * img_height * img_width * sizeof(unsigned char));
             for ( i = 0 , j = 0; i < img_height * img_width; i++ , j += 3 )
             {
