@@ -86,7 +86,9 @@ int* process_img(int* block, int block_width, int block_height, int rep_num, int
         }
         // Wait on send of our outer
         wait_on_send(requests_send);
-        memcpy(block, tmp_block, block_width * block_height * sizeof(int));
+        int* tmp = tmp_block;
+        tmp_block = block;
+        block = tmp;
     }
     free(tmp_block);
     return block;
@@ -99,7 +101,7 @@ void compute_inner_values(int* src_array, int* dest_array,
     int i, row_number = 3;
     int array_size = width * height;
 #ifdef _OPENMP
-#pragma omp parallel for num_threads(20)
+#pragma omp parallel for num_threads(4)
 #endif
     for (i = 2 * width + 2; i < array_size - 2 * width - 2; i++)
     {
