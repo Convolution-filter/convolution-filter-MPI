@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 
             printf("%f\n", end_time - start_time);
             // write BW image as raw file
-            FILE* output = fopen("/tmp/output.raw", "wb");
+            FILE* output = fopen("output.raw", "wb");
             unsigned char* img_buffer = malloc(img_height * img_width *
                                             sizeof(unsigned char));
 

@@ -4,9 +4,11 @@
 #include <unistd.h>
 #include <mpi.h>
 #include <string.h>
+#ifdef OMP  //if defined during compile, try to use OpenMP
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#endif  //OMP
 #include "processing_img.h"
 #include "send_wrappers.h"
 #include "recv_wrappers.h"
@@ -100,9 +102,11 @@ void compute_inner_values(int* src_array, int* dest_array,
 {
     int i, row_number = 3;
     int array_size = width * height;
+#ifdef OMP
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(4)
 #endif
+#endif // OMP
     for (i = 2 * width + 2; i < array_size - 2 * width - 2; i++)
     {
         if( i % (row_number * width - 2) == 0)
