@@ -12,6 +12,6 @@ and a convolution matrix.
 ## Why make it parallel
 The computation of the value of the *i-th* output pixel is based on the value of the input pixel *i* and it's
 surrounding pixels. This shows that there is much locality on the computations needed. In fact if the filter is
-a 3x3 matrix, in order to compute the output values of a rectangle NxM part of the original image there is
+a *3x3* matrix, in order to compute the output values of a rectangle *NxM* part of the original image there is
 only need for the adjacent pixels witch are *2x(N+2)* for the upper and lower rows plus *2x(M+2)* for the
 right and left columns. That locality make it potentially a good candidate for a parallel approach.
