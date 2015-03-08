@@ -1,4 +1,4 @@
-C = mpicc
+CC = mpicc
 FLAGS = -c
 LINK_FLAGS = -lm
 OBJS = main.o send_wrappers.o recv_wrappers.o initializations.o processing_img.o
@@ -8,29 +8,29 @@ OUTPUT = output.raw
 # Compile
 all: $(OBJS)
 ifdef OPEN_MP
-	$(C) $(OBJS) -fopenmp $(LINK_FLAGS) -o $(EXECUTABLE_NAME)
+	$(CC) $(OBJS) -fopenmp $(LINK_FLAGS) -o $(EXECUTABLE_NAME)
 else
-	$(C) $(OBJS) $(LINK_FLAGS) -o $(EXECUTABLE_NAME)
+	$(CC) $(OBJS) $(LINK_FLAGS) -o $(EXECUTABLE_NAME)
 endif
 	rm -f $(OBJS)
 
 main.o: main.c
-	$(C) $(FLAGS) main.c
+	$(CC) $(FLAGS) main.c
 
 send_wrappers.o: send_wrappers.c
-	$(C) $(FLAGS) send_wrappers.c
+	$(CC) $(FLAGS) send_wrappers.c
 
 recv_wrappers.o: recv_wrappers.c
-	$(C) $(FLAGS) recv_wrappers.c
+	$(CC) $(FLAGS) recv_wrappers.c
 
 initializations.o: initializations.c
-	$(C) $(FLAGS) initializations.c
+	$(CC) $(FLAGS) initializations.c
 
 processing_img.o: processing_img.c
 ifdef OPEN_MP
-	$(C) $(FLAGS) -D OMP -fopenmp processing_img.c
+	$(CC) $(FLAGS) -D OMP -fopenmp processing_img.c
 else
-	$(C) $(FLAGS) processing_img.c
+	$(CC) $(FLAGS) processing_img.c
 endif
 # Clean-up
 clean:
